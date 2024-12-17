@@ -48,7 +48,8 @@ void piano_mode(){
 			// This means the next getch() will give us the actual scan code
 			ch = getch();
 
-			// Handle UP Arrow -> Octave Up
+			// Handle Octave Up
+			// Handle Octave Down
 			if (ch == 72) {
 				if (g_octave < MAX_OCTAVES){
 					g_octave++;
@@ -58,8 +59,6 @@ void piano_mode(){
 					printf("** Max Octaves Reached **\n");
 				}
 			}
-
-			// Handle DOWN Arrow -> Octave Down
 			else if (ch == 80) {
 				if (g_octave > 1) {
 					g_octave--;

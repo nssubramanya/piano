@@ -1,4 +1,4 @@
-#if !defined(__OCTAVE_H__)
+#ifndef __OCTAVE_H__
 #define __OCTAVE_H__
 
 /* Octave Base Frequencies */

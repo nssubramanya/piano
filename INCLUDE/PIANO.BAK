@@ -13,7 +13,7 @@
 #define MAX_OCTAVES 5
 #define MIN_OCTAVES 1
 
-#define NOTE_DELAY 300
+#define NOTE_DELAY 250
 
 // Frequence of Notes SA, RE, GA, MA, PA, DHA, NI
 const short int note_freq[] = {240, 270, 300, 320, 360, 400, 450};
