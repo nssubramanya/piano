@@ -1,7 +1,7 @@
 # Requirements
 ## User Interface
 ### Keyboard Display
-* How many octaves to show?
+* How many octaves to show? - Currently we'll show only 1 octave and show Increase/Decrease
 * Show individual Keys - Black & White Keys
 * Show Key Depress
 * Show Note Names on the Keys
