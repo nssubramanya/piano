@@ -56,21 +56,25 @@
 #define UPDATE_OCTAVE 1
 #define UPDATE_NOTE 2
 
+#define DRAW_TYPE_DRAW_ONLY 1
+#define DRAW_TYPE_UPDATE 2
+
 enum KeyType {WHITE_KEY=1, BLACK_KEY=2};
 
 extern int maxX, maxY;
-extern const short int note_freq[12];
+extern const double note_freq[12];
 extern const char* note_names[12];
 
-void play_note(int frequency, int duration);
+void play_note(int note, unsigned int frequency, int duration);
 void initialize_graphics_mode();
 
 void end_graphics_mode();
 void show_ui();
 void draw_screen();
 void draw_piano();
-void draw_key(int key_number, int key_type, int key_state);
+void draw_key(int draw_type, int key_number, int key_type, int key_state);
 void show_text(int x, int y, int width, int height, char *text,
 	int font, int direction, int size, int color, int hjust, int vjust);
-void update_stats(int update_type, char ch, char* note, double freq);
+void update_stats(int update_type, char ch, char* note, unsigned int freq);
+void update_key(int note, int state);
 #endif

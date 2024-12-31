@@ -5,24 +5,31 @@
 #include <graphics.h>
 #include <math.h>
 #include <string.h>
+#include <dos.h>
 
 /* Include User Header Files */
 #include "include\\piano.h"
 //#include "include\\octave.h"
 
-short int g_octave = DEFAULT_OCTAVE;
+	short int g_octave = DEFAULT_OCTAVE;
 
 // Frequeny of Notes SA, RE, GA, MA, PA, DHA, NI
-const short int note_freq[12] = {16.35, 17.32, 18.35, 19.45, 20.60, 21.83, 23.12,
+const double note_freq[12] = {16.35, 17.32, 18.35, 19.45, 20.60, 21.83, 23.12,
 	24.50, 25.96, 27.50, 29.14, 30.87};
 const char* note_names[12] = {"SA", "re", "RE", "ga", "GA", "MA", "ma", "PA", "dha", "DHA", "ni", "NI"};
 const int WHITE_KEYS[] = {0, 2, 4, 5, 7, 9, 11};
 const int BLACK_KEYS[] = {1, 3, 6, 8, 10};
 
-void play_note(int frequency, int duration) {
+void play_note(int note, unsigned int frequency, int duration) {
+	if (note != -1)
+		update_key(note, KEY_STATE_PRESSED);
+
 	sound(frequency);  // Start sound at given frequency
 	delay(duration);   // Wait for the duration (in milliseconds)
 	nosound();         // Stop the sound
+
+	if (note != -1)
+		update_key(note, KEY_STATE_RELEASED);
 }
 
 void play_octave() {
@@ -35,15 +42,22 @@ void play_octave() {
 		for (note = 0; note < 7; note++){
 			printf("Playing Octave [%d] - Note [%d] - Frequency: [%d]\n",
 				octave, base_octave[note], base_octave[note] * octave);
-			play_note(base_octave[note] * octave, DELAY/2);
+			play_note(note, base_octave[note] * octave, DELAY/2);
 		}
 		delay (1000);
 	}
 }
 
+int intpow (int base, int exp) {
+	int i, result=base;
+	for (i = 0; i < exp; i++)
+		result *= base;
+	return result;
+}
+
 void piano_mode(){
 	int ch, note;
-	double frequency;
+	unsigned int frequency;
 	int multiplier;
 
 	//printf("--- Entering PIANO Mode ---\n");
@@ -69,7 +83,7 @@ void piano_mode(){
 					//printf("--- Octave Up --- %d\n", g_octave);
 				}
 				else {
-					play_note(2000, 100);
+					play_note(0, 4000, 1000);
 					//printf("** Max Octaves Reached **\n");
 				}
 			}
@@ -83,7 +97,7 @@ void piano_mode(){
 					//printf("--- Octave Down --- %d\n", g_octave);
 				}
 				else {
-					play_note(2000, 100);
+					play_note(0, 4000, 1000);
 					//printf("** Min Octaves Reached **\n");
 				}
 			}
@@ -132,17 +146,21 @@ void piano_mode(){
 			}
 
 			if (note >= SA && note <= NI) {
-				multiplier = pow(2, g_octave);
+				//multiplier = pow(2, g_octave);
+				multiplier = intpow(2, g_octave);
+
 				frequency = note_freq[note] * multiplier;
-				//printf("Key pressed: '%c'. Note: %s, Freq: %d\n",
-				//	ch,
-				//	note_names[note],
-				//	frequency);
+				/*printf("Key pressed: '%c'. Note: %s, Freq: %u\n",
+					ch,
+					note_names[note],
+					frequency);*/
+
+				//update_key(note);
 				update_stats(UPDATE_NOTE, ch, note_names[note], frequency);
 
 
 				// Play Note
-				play_note(frequency, NOTE_DELAY);
+				play_note(note, (unsigned int) frequency, NOTE_DELAY);
 			}
 		}
 	}
@@ -197,21 +215,23 @@ void draw_footer(){
 		DEFAULT_FONT, HORIZ_DIR, 1, WHITE, LEFT_TEXT, CENTER_TEXT);
 }
 
-void draw_key(int key_number, int key_type, int key_state){
-	int kx, ky, kw, kh, kc, kr;
+void draw_key(int draw_type, int key_number, int key_type, int key_state){
+	int kx, ky, kw, kh, kc, kr, text_color;
 	int x1, y1, x2, y2;
 	int num_white_keys_to_skip;
 
 	// determine key color
 	switch (key_state){
 		case KEY_STATE_PRESSED:
-			kc = DARKGRAY;
+			kc = WHITE;
+			text_color = GREEN;
 			break;
 		case KEY_STATE_RELEASED:
 			if(key_type == WHITE_KEY)
 				kc = WHITE;
 			else
 				kc = BLACK;
+			text_color = MAGENTA;
 			break;
 	}
 
@@ -258,13 +278,42 @@ void draw_key(int key_number, int key_type, int key_state){
 
 	//bar(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
 	//rectangle(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
-	bar(x1, y1, x2, y2);
-	rectangle(x1, y1, x2, y2);
+	if (draw_type == DRAW_TYPE_DRAW_ONLY){
+		bar(x1, y1, x2, y2);
+		rectangle(x1, y1, x2, y2);
+	}
 
 	// Write Text
 	show_text(x1, y2 - KEY_TEXT_HEIGHT, x2-x1, KEY_TEXT_HEIGHT,
-		note_names[kr], DEFAULT_FONT, HORIZ_DIR, 1, MAGENTA, CENTER_TEXT, CENTER_TEXT);
+		note_names[kr], DEFAULT_FONT, HORIZ_DIR, 1, text_color, CENTER_TEXT, CENTER_TEXT);
 
+}
+
+void update_key(int note, int state){
+	int key_type, key_number;
+	int i, got_key = 0;
+	// Determine key to be pressed
+	// Check if note is a White key or a Black key
+	for (i = 1; i <= 7; i++){
+		if (note == WHITE_KEYS[i-1]){
+			key_number = i;
+			key_type = WHITE_KEY;
+			got_key = 1;
+			break;
+		}
+	}
+	if (!got_key) {
+		for (i = 1; i <= 5; i++){
+			if (note == BLACK_KEYS[i-1]){
+				key_number = i;
+				key_type = BLACK_KEY;
+				got_key = 1;
+				break;
+			}
+		}
+	}
+	// Change the Color of the Key Text
+	draw_key(DRAW_TYPE_UPDATE, key_number, key_type, state);
 }
 
 void draw_piano(){
@@ -274,14 +323,12 @@ void draw_piano(){
 	//rectangle(PIANO_X, PIANO_Y,
 	//	PIANO_X + 7 * WHITE_KEY_WIDTH, PIANO_Y + WHITE_KEY_HEIGHT);
 	for (i = 1; i <= 7; i++){
-		draw_key(i, WHITE_KEY, KEY_STATE_RELEASED);
+		draw_key(DRAW_TYPE_DRAW_ONLY, i, WHITE_KEY, KEY_STATE_RELEASED);
 	}
 	for (i = 1; i <= 5; i++){
-		draw_key(i, BLACK_KEY, KEY_STATE_RELEASED);
+		draw_key(DRAW_TYPE_DRAW_ONLY, i, BLACK_KEY, KEY_STATE_RELEASED);
 	}
-	draw_key(1, WHITE_KEY, KEY_STATE_PRESSED);
-	draw_key(1, BLACK_KEY, KEY_STATE_RELEASED);
-	draw_key(5, BLACK_KEY, KEY_STATE_PRESSED);
+
 }
 
 void draw_stats(){
@@ -331,7 +378,7 @@ void draw_stats(){
 // This funciton is hacky and hard-coded for 640x480
 // to improve performance
 // Refactor later
-void update_stats(int update_type, char ch, char* note, double freq){
+void update_stats(int update_type, char ch, char* note, unsigned int freq){
 	char str[8] = "";
 
 	setfillstyle(SOLID_FILL, BLACK);
@@ -355,7 +402,7 @@ void update_stats(int update_type, char ch, char* note, double freq){
 
 		bar(503, 271, 577, 313);
 		str[0] = 0;
-		sprintf(str,"%.2f", freq);
+		sprintf(str,"%u", freq);
 		show_text(503, 271, 74, 42,
 			str, DEFAULT_FONT, HORIZ_DIR, 1, RED, CENTER_TEXT, CENTER_TEXT);
 	}
