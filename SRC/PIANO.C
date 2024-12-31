@@ -145,16 +145,23 @@ void show_text(int x, int y, int width, int height, char *text,
 			tx = x + (width-tw)/2;
 			break;
 		case LEFT_TEXT:
-			tx = x + 10;
+			tx = x;
 			break;
 		case RIGHT_TEXT:
-			tx = x + width - tw - 10;
+			tx = x + width - tw;
 			break;
 	}
 
-	// Assuming CENTER_JUST for Vertical as of now
+	switch(vjust){
+		case TOP_TEXT:
+			ty = y;
+			break;
 
-	ty = y + (height-th)/2;
+		case CENTER_TEXT:
+			ty = y + (height-th)/2;
+			break;
+	}
+
 	outtextxy(tx, ty, text);
 
 }
@@ -177,7 +184,6 @@ void draw_footer(){
 void draw_key(int key_number, int key_type, int key_state){
 	int kx, ky, kw, kh, kc, kr;
 	int x1, y1, x2, y2;
-	char *ktext=NULL;
 	int num_white_keys_to_skip;
 
 	// determine key color
@@ -263,6 +269,66 @@ void draw_piano(){
 }
 
 void draw_stats(){
+	int x1, y1, x2, y2;
+	int height, width, th;
+
+	setcolor(BLACK);
+	setfillstyle(SOLID_FILL, BLACK);
+	rectangle(STATS_X, PIANO_Y, STATS_X + STATS_WIDTH, PIANO_Y + WHITE_KEY_HEIGHT);
+
+	x1 = STATS_X+STATS_MARGIN;
+	x2 = STATS_X+STATS_WIDTH-STATS_MARGIN;
+	width = x2 - x1;
+	height = WHITE_KEY_HEIGHT/3-2*STATS_MARGIN;
+	settextstyle(SMALL_FONT, HORIZ_DIR, 4);
+	th = textheight("Key");
+
+	y1 = PIANO_Y + STATS_KEY_PRESSED_Y;
+//	rectangle(x1, y1, x2, y1 + height);
+	show_text(x1, y1,width, height,
+		"Octave:", SMALL_FONT, HORIZ_DIR, 4, BLACK, LEFT_TEXT, TOP_TEXT);
+	y1 = y1 + th + 6;
+	y2 = y1 + height - 2 * th;
+	bar(x1, y1, x2, y2);
+//	printf("%d %d %d %d\n", x1, y1, x2, y2);
+
+	y1 = PIANO_Y + STATS_NOTE_PLAYED_Y;
+//	rectangle(x1, y1, x2, y1 + height);
+	show_text(x1, y1, width, height,
+		"Note Played:", SMALL_FONT, HORIZ_DIR, 4, BLACK, LEFT_TEXT, TOP_TEXT);
+
+	y1 = y1 + th + 6;
+	y2 = y1 + height - 2 * th;
+	bar(x1, y1, x2, y2);
+//		printf("%d %d %d %d\n", x1, y1, x2, y2);
+
+	y1 = PIANO_Y + STATS_FREQUENCY_Y;
+//	rectangle(x1, y1, x2, y1 + height);
+	show_text(x1, y1, width, height,
+		"Frequency:", SMALL_FONT, HORIZ_DIR, 4, BLACK, LEFT_TEXT, TOP_TEXT);
+	y1 = y1 + th + 6;
+	y2 = y1 + height - 2 * th;
+	bar(x1, y1, x2, y2);
+//	printf("%d %d %d %d\n", x1, y1, x2, y2);
+}
+
+// This funciton is hacky and hard-coded for 640x480
+// to improve performance
+// Refactor later
+void update_stats(){
+	setfillstyle(SOLID_FILL, BLACK);
+
+	bar(503, 138, 577, 180);
+	show_text(503, 138, 74, 42,
+		"4", DEFAULT_FONT, HORIZ_DIR, 3, RED, CENTER_TEXT, CENTER_TEXT);
+
+	bar(503, 204, 573, 246);
+	show_text(503, 204, 74, 42,
+		"Sa", DEFAULT_FONT, HORIZ_DIR, 1, RED, CENTER_TEXT, CENTER_TEXT);
+	bar(503, 271, 577, 313);
+	show_text(503, 271, 74, 42,
+		"440.45", DEFAULT_FONT, HORIZ_DIR, 1, RED, CENTER_TEXT, CENTER_TEXT);
+
 }
 
 void draw_main_screen(){
@@ -271,6 +337,7 @@ void draw_main_screen(){
 
 	draw_piano();
 	draw_stats();
+	update_stats();
 }
 
 void draw_screen(){
