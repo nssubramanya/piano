@@ -2,12 +2,16 @@
 /* Incldue System Header Files */
 #include <stdio.h>
 #include <conio.h>
-
+#include <graphics.h>
 /* Include User Header Files */
 #include "include\\piano.h"
 //#include "include\\octave.h"
 
 short int g_octave = MIN_OCTAVES;
+
+// Frequeny of Notes SA, RE, GA, MA, PA, DHA, NI
+const short int note_freq[7] = {240, 270, 300, 320, 360, 400, 450};
+const char* note_names[7] = {"Sa", "Re", "Ga", "Ma", "Pa", "Dha", "Ni"};
 
 void play_note(int frequency, int duration) {
 	sound(frequency);  // Start sound at given frequency
@@ -102,9 +106,68 @@ void piano_mode(){
 		}
 	}
 }
+void show_text(int x, int y, int width, int height, char *text,
+	int font, int direction, int size, int color, int hjust, int vjust){
+	int tw, th, tx, ty;
+	setcolor(color);
+	settextstyle(font, direction, size);
+
+	tw = textwidth(text);
+	th = textheight(text);
+
+	switch(hjust){
+		case CENTER_TEXT:
+			tx = x + (width-tw)/2;
+			break;
+		case LEFT_TEXT:
+			tx = x + 10;
+			break;
+		case RIGHT_TEXT:
+			tx = x + width - tw - 10;
+			break;
+	}
+
+	// Assuming CENTER_JUST for Vertical as of now
+
+	ty = y + (height-th)/2;
+	outtextxy(tx, ty, text);
+
+}
+void draw_header(){
+	setfillstyle(SOLID_FILL, BROWN);
+	bar(0,0,maxX,HEADER_HEIGHT);
+
+	show_text(0, 0, maxX, HEADER_HEIGHT, "PIANO",
+		DEFAULT_FONT, HORIZ_DIR, 2, WHITE, CENTER_TEXT, CENTER_TEXT);
+}
+
+void draw_footer(){
+	setfillstyle(SOLID_FILL, BLUE);
+	bar(0,maxY-FOOTER_HEIGHT,maxX,maxY);
+}
+
+void draw_main_screen(){
+	setfillstyle(SOLID_FILL, LIGHTGRAY);
+	bar(0, HEADER_HEIGHT+1, maxX, maxY-FOOTER_HEIGHT-1);
+}
+
+void draw_screen(){
+	draw_header();
+	draw_main_screen();
+	draw_footer();
+}
+
+void show_ui(){
+	draw_screen();
+}
 
 void main() {
 	clrscr();
+	initialize_graphics_mode();
+	show_ui();
 
-	piano_mode();
+	//piano_mode();
+	getch();
+	end_graphics_mode();
+
 }

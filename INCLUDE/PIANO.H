@@ -12,12 +12,23 @@
 
 #define MAX_OCTAVES 5
 #define MIN_OCTAVES 1
-
 #define NOTE_DELAY 300
 
-// Frequence of Notes SA, RE, GA, MA, PA, DHA, NI
-const short int note_freq[] = {240, 270, 300, 320, 360, 400, 450};
-const char* note_names[] = {"Sa", "Re", "Ga", "Ma", "Pa", "Dha", "Ni"};
+#define HEADER_HEIGHT 48
+#define FOOTER_HEIGHT 48
+
+enum KeyType {WHITE_KEY=1, BLACK_KEY=2};
+
+extern int maxX, maxY;
+extern const short int note_freq[7];
+extern const char* note_names[7];
 
 void play_note(int frequency, int duration);
+void initialize_graphics_mode();
+
+void end_graphics_mode();
+void show_ui();
+void draw_screen();
+void draw_piano();
+void draw_key(short int key_type);
 #endif
