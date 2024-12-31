@@ -13,6 +13,8 @@ short int g_octave = DEFAULT_OCTAVE;
 const short int note_freq[12] = {16.35, 17.32, 18.35, 19.45, 20.60, 21.83, 23.12,
 	24.50, 25.96, 27.50, 29.14, 30.87};
 const char* note_names[12] = {"Sa", "re", "Re", "ga", "Ga", "Ma", "ma", "Pa", "dha", "Dha", "ni", "Ni"};
+const int WHITE_KEYS[] = {0, 2, 4, 5, 7, 9, 11};
+const int BLACK_KEYS[] = {1, 3, 6, 8, 10};
 
 void play_note(int frequency, int duration) {
 	sound(frequency);  // Start sound at given frequency
@@ -173,7 +175,10 @@ void draw_footer(){
 }
 
 void draw_key(int key_number, int key_type, int key_state){
-	int kx, ky, kw, kh, kc;
+	int kx, ky, kw, kh, kc, kr;
+	int x1, y1, x2, y2;
+	char *ktext=NULL;
+	int num_white_keys_to_skip;
 
 	// determine key color
 	switch (key_state){
@@ -199,6 +204,8 @@ void draw_key(int key_number, int key_type, int key_state){
 
 			// key_number starts from 1, so offset it
 			kx = (key_number-1) * kw;
+			kr = WHITE_KEYS[key_number-1];
+
 			//bar(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
 			//rectangle(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
 			break;
@@ -210,16 +217,31 @@ void draw_key(int key_number, int key_type, int key_state){
 			// Determine x-location
 			// Need to skip 1 key for later 3 keys
 			if (key_number <= 2)
-				key_number--;
+				num_white_keys_to_skip = key_number - 1;
+			else
+				num_white_keys_to_skip = key_number;
 
-			kx = key_number * WHITE_KEY_WIDTH + WHITE_KEY_WIDTH/2 + BLACK_KEY_OFFSET;
-
+			kx = num_white_keys_to_skip * WHITE_KEY_WIDTH + WHITE_KEY_WIDTH/2 + BLACK_KEY_OFFSET;
+			kr = BLACK_KEYS[key_number-1];
 			//bar(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
 			//rectangle(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
 			break;
 	}
-	bar(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
-	rectangle(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
+
+	// Draw the key
+	x1 = PIANO_X + kx;
+	y1 = PIANO_Y;
+	x2 = PIANO_X + kx + kw;
+	y2 = PIANO_Y + kh;
+
+	//bar(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
+	//rectangle(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
+	bar(x1, y1, x2, y2);
+	rectangle(x1, y1, x2, y2);
+
+	// Write Text
+	show_text(x1, y2 - KEY_TEXT_HEIGHT, x2-x1, KEY_TEXT_HEIGHT,
+		note_names[kr], DEFAULT_FONT, HORIZ_DIR, 1, MAGENTA, CENTER_TEXT, CENTER_TEXT);
 
 }
 
@@ -263,11 +285,11 @@ void show_ui(){
 
 void main() {
 	clrscr();
-	//initialize_graphics_mode();
-	//show_ui();
+	initialize_graphics_mode();
+	show_ui();
 
-	piano_mode();
+	//piano_mode();
 	getch();
-	//end_graphics_mode();
+	end_graphics_mode();
 
 }

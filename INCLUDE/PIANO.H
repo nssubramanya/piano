@@ -61,4 +61,6 @@ void show_ui();
 void draw_screen();
 void draw_piano();
 void draw_key(int key_number, int key_type, int key_state);
+void show_text(int x, int y, int width, int height, char *text,
+	int font, int direction, int size, int color, int hjust, int vjust);
 #endif
