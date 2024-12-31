@@ -7,11 +7,12 @@
 #include "include\\piano.h"
 //#include "include\\octave.h"
 
-short int g_octave = MIN_OCTAVES;
+short int g_octave = DEFAULT_OCTAVE;
 
 // Frequeny of Notes SA, RE, GA, MA, PA, DHA, NI
-const short int note_freq[7] = {240, 270, 300, 320, 360, 400, 450};
-const char* note_names[7] = {"Sa", "Re", "Ga", "Ma", "Pa", "Dha", "Ni"};
+const short int note_freq[12] = {16.35, 17.32, 18.35, 19.45, 20.60, 21.83, 23.12,
+	24.50, 25.96, 27.50, 29.14, 30.87};
+const char* note_names[12] = {"Sa", "re", "Re", "ga", "Ga", "Ma", "ma", "Pa", "dha", "Dha", "ni", "Ni"};
 
 void play_note(int frequency, int duration) {
 	sound(frequency);  // Start sound at given frequency
@@ -75,23 +76,45 @@ void piano_mode(){
 			}
 		} else {
 			// Map the keys to notes
-
-			if (ch == 's' || ch == 'S')
-				note = SA;
-			else if (ch == 'r' || ch == 'R')
-				note = RE;
-			else if (ch == 'g' || ch == 'G')
-				note = GA;
-			else if (ch == 'm' || ch == 'M')
-				note = MA;
-			else if (ch == 'p' || ch == 'P')
-				note = PA;
-			else if (ch == 'd' || ch == 'D')
-				note = DHA;
-			else if (ch == 'n' || ch == 'N')
-				note = NI;
-			else
-				note = -1;
+			switch (ch) {
+				case 'S':
+					note = SA;
+					break;
+				case 'r':
+					note = re;
+					break;
+				case 'R':
+					note = RE;
+					break;
+				case 'g':
+					note = ga;
+					break;
+				case 'G':
+					note = GA;
+					break;
+				case 'M':
+					note = MA;
+					break;
+				case 'm':
+					note = ma;
+					break;
+				case 'P':
+					note = PA;
+					break;
+				case 'd':
+					note = dha;
+				case 'D':
+					note = DHA;
+					break;
+				case 'n':
+					note = ni;
+				case 'N':
+					note = NI;
+					break;
+				default:
+					note = -1;
+					break;
+			}
 
 			if (note >= SA && note <= NI) {
 				frequency = note_freq[note] * g_octave;
@@ -137,18 +160,95 @@ void draw_header(){
 	setfillstyle(SOLID_FILL, BROWN);
 	bar(0,0,maxX,HEADER_HEIGHT);
 
-	show_text(0, 0, maxX, HEADER_HEIGHT, "PIANO",
+	show_text(0, 0, maxX, HEADER_HEIGHT, HEADER_TEXT,
 		DEFAULT_FONT, HORIZ_DIR, 2, WHITE, CENTER_TEXT, CENTER_TEXT);
 }
 
 void draw_footer(){
 	setfillstyle(SOLID_FILL, BLUE);
-	bar(0,maxY-FOOTER_HEIGHT,maxX,maxY);
+	bar(0, maxY-FOOTER_HEIGHT, maxX, maxY);
+
+	show_text(0, maxY-FOOTER_HEIGHT, maxX, FOOTER_HEIGHT, FOOTER_TEXT,
+		DEFAULT_FONT, HORIZ_DIR, 1, WHITE, LEFT_TEXT, CENTER_TEXT);
+}
+
+void draw_key(int key_number, int key_type, int key_state){
+	int kx, ky, kw, kh, kc;
+
+	// determine key color
+	switch (key_state){
+		case KEY_STATE_PRESSED:
+			kc = DARKGRAY;
+			break;
+		case KEY_STATE_RELEASED:
+			if(key_type == WHITE_KEY)
+				kc = WHITE;
+			else
+				kc = BLACK;
+			break;
+	}
+
+	setcolor(BLACK);
+	setfillstyle(SOLID_FILL, kc);
+
+	// draw the key
+	switch(key_type){
+		case WHITE_KEY:
+			kw = WHITE_KEY_WIDTH;
+			kh = WHITE_KEY_HEIGHT;
+
+			// key_number starts from 1, so offset it
+			kx = (key_number-1) * kw;
+			//bar(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
+			//rectangle(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
+			break;
+
+		case BLACK_KEY:
+			kw = BLACK_KEY_WIDTH;
+			kh = BLACK_KEY_HEIGHT;
+
+			// Determine x-location
+			// Need to skip 1 key for later 3 keys
+			if (key_number <= 2)
+				key_number--;
+
+			kx = key_number * WHITE_KEY_WIDTH + WHITE_KEY_WIDTH/2 + BLACK_KEY_OFFSET;
+
+			//bar(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
+			//rectangle(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
+			break;
+	}
+	bar(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
+	rectangle(PIANO_X + kx, PIANO_Y, PIANO_X + kx + kw, PIANO_Y + kh);
+
+}
+
+void draw_piano(){
+	int i;
+
+	setcolor(BLACK);
+	//rectangle(PIANO_X, PIANO_Y,
+	//	PIANO_X + 7 * WHITE_KEY_WIDTH, PIANO_Y + WHITE_KEY_HEIGHT);
+	for (i = 1; i <= 7; i++){
+		draw_key(i, WHITE_KEY, KEY_STATE_RELEASED);
+	}
+	for (i = 1; i <= 5; i++){
+		draw_key(i, BLACK_KEY, KEY_STATE_RELEASED);
+	}
+	draw_key(1, WHITE_KEY, KEY_STATE_PRESSED);
+	draw_key(1, BLACK_KEY, KEY_STATE_RELEASED);
+	draw_key(5, BLACK_KEY, KEY_STATE_PRESSED);
+}
+
+void draw_stats(){
 }
 
 void draw_main_screen(){
 	setfillstyle(SOLID_FILL, LIGHTGRAY);
 	bar(0, HEADER_HEIGHT+1, maxX, maxY-FOOTER_HEIGHT-1);
+
+	draw_piano();
+	draw_stats();
 }
 
 void draw_screen(){
@@ -163,11 +263,11 @@ void show_ui(){
 
 void main() {
 	clrscr();
-	initialize_graphics_mode();
-	show_ui();
+	//initialize_graphics_mode();
+	//show_ui();
 
-	//piano_mode();
+	piano_mode();
 	getch();
-	end_graphics_mode();
+	//end_graphics_mode();
 
 }
