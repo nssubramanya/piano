@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <conio.h>
 #include <graphics.h>
+#include <math.h>
+#include <string.h>
+
 /* Include User Header Files */
 #include "include\\piano.h"
 //#include "include\\octave.h"
@@ -12,7 +15,7 @@ short int g_octave = DEFAULT_OCTAVE;
 // Frequeny of Notes SA, RE, GA, MA, PA, DHA, NI
 const short int note_freq[12] = {16.35, 17.32, 18.35, 19.45, 20.60, 21.83, 23.12,
 	24.50, 25.96, 27.50, 29.14, 30.87};
-const char* note_names[12] = {"Sa", "re", "Re", "ga", "Ga", "Ma", "ma", "Pa", "dha", "Dha", "ni", "Ni"};
+const char* note_names[12] = {"SA", "re", "RE", "ga", "GA", "MA", "ma", "PA", "dha", "DHA", "ni", "NI"};
 const int WHITE_KEYS[] = {0, 2, 4, 5, 7, 9, 11};
 const int BLACK_KEYS[] = {1, 3, 6, 8, 10};
 
@@ -39,14 +42,16 @@ void play_octave() {
 }
 
 void piano_mode(){
-	int ch, note, frequency;
+	int ch, note;
+	double frequency;
+	int multiplier;
 
-	printf("--- Entering PIANO Mode ---\n");
+	//printf("--- Entering PIANO Mode ---\n");
 	while(1){
 		ch = getch(); // Read a single character without echo
 
 		if (ch == 27) { // ESC key ASCII code is 27
-			printf("--- Exiting PIANO Mode ---\n");
+			//printf("--- Exiting PIANO Mode ---\n");
 			break;
 		}
 
@@ -59,10 +64,13 @@ void piano_mode(){
 			if (ch == 72) {
 				if (g_octave < MAX_OCTAVES){
 					g_octave++;
-					printf("--- Octave Up --- %d\n", g_octave);
+
+					update_stats(UPDATE_OCTAVE, 0, "", 0.0);
+					//printf("--- Octave Up --- %d\n", g_octave);
 				}
 				else {
-					printf("** Max Octaves Reached **\n");
+					play_note(2000, 100);
+					//printf("** Max Octaves Reached **\n");
 				}
 			}
 
@@ -70,10 +78,13 @@ void piano_mode(){
 			else if (ch == 80) {
 				if (g_octave > 1) {
 					g_octave--;
-					printf("--- Octave Down --- %d\n", g_octave);
+
+					update_stats(UPDATE_OCTAVE, 0, "", 0.0);
+					//printf("--- Octave Down --- %d\n", g_octave);
 				}
 				else {
-					printf("** Min Octaves Reached **\n");
+					play_note(2000, 100);
+					//printf("** Min Octaves Reached **\n");
 				}
 			}
 		} else {
@@ -105,11 +116,13 @@ void piano_mode(){
 					break;
 				case 'd':
 					note = dha;
+					break;
 				case 'D':
 					note = DHA;
 					break;
 				case 'n':
 					note = ni;
+					break;
 				case 'N':
 					note = NI;
 					break;
@@ -119,11 +132,14 @@ void piano_mode(){
 			}
 
 			if (note >= SA && note <= NI) {
-				frequency = note_freq[note] * g_octave;
-				printf("Key pressed: '%c'. Note: %s, Freq: %d\n",
-					ch,
-					note_names[note],
-					frequency);
+				multiplier = pow(2, g_octave);
+				frequency = note_freq[note] * multiplier;
+				//printf("Key pressed: '%c'. Note: %s, Freq: %d\n",
+				//	ch,
+				//	note_names[note],
+				//	frequency);
+				update_stats(UPDATE_NOTE, ch, note_names[note], frequency);
+
 
 				// Play Note
 				play_note(frequency, NOTE_DELAY);
@@ -315,20 +331,34 @@ void draw_stats(){
 // This funciton is hacky and hard-coded for 640x480
 // to improve performance
 // Refactor later
-void update_stats(){
+void update_stats(int update_type, char ch, char* note, double freq){
+	char str[8] = "";
+
 	setfillstyle(SOLID_FILL, BLACK);
 
-	bar(503, 138, 577, 180);
-	show_text(503, 138, 74, 42,
-		"4", DEFAULT_FONT, HORIZ_DIR, 3, RED, CENTER_TEXT, CENTER_TEXT);
+	if (update_type == UPDATE_OCTAVE){
+		bar(503, 138, 577, 180);
+		sprintf(str, "%d", g_octave);
+		show_text(503, 138, 74, 42,
+			str, DEFAULT_FONT, HORIZ_DIR, 3, RED, CENTER_TEXT, CENTER_TEXT);
+	} else {
+		bar(503, 138, 577, 180);
+		sprintf(str, "%d", g_octave);
+		show_text(503, 138, 74, 42,
+			str, DEFAULT_FONT, HORIZ_DIR, 3, RED, CENTER_TEXT, CENTER_TEXT);
 
-	bar(503, 204, 573, 246);
-	show_text(503, 204, 74, 42,
-		"Sa", DEFAULT_FONT, HORIZ_DIR, 1, RED, CENTER_TEXT, CENTER_TEXT);
-	bar(503, 271, 577, 313);
-	show_text(503, 271, 74, 42,
-		"440.45", DEFAULT_FONT, HORIZ_DIR, 1, RED, CENTER_TEXT, CENTER_TEXT);
+		bar(503, 204, 573, 246);
+		str[0] = 0;
+		sprintf(str,"%c -> %s", ch, note);
+		show_text(503, 204, 74, 42,
+			str, DEFAULT_FONT, HORIZ_DIR, 1, RED, CENTER_TEXT, CENTER_TEXT);
 
+		bar(503, 271, 577, 313);
+		str[0] = 0;
+		sprintf(str,"%.2f", freq);
+		show_text(503, 271, 74, 42,
+			str, DEFAULT_FONT, HORIZ_DIR, 1, RED, CENTER_TEXT, CENTER_TEXT);
+	}
 }
 
 void draw_main_screen(){
@@ -337,7 +367,6 @@ void draw_main_screen(){
 
 	draw_piano();
 	draw_stats();
-	update_stats();
 }
 
 void draw_screen(){
@@ -355,7 +384,7 @@ void main() {
 	initialize_graphics_mode();
 	show_ui();
 
-	//piano_mode();
+	piano_mode();
 	getch();
 	end_graphics_mode();
 

@@ -53,6 +53,9 @@
 
 #define PRESSED_KEY_COLOR DARK_GRAY
 
+#define UPDATE_OCTAVE 1
+#define UPDATE_NOTE 2
+
 enum KeyType {WHITE_KEY=1, BLACK_KEY=2};
 
 extern int maxX, maxY;
@@ -69,4 +72,5 @@ void draw_piano();
 void draw_key(int key_number, int key_type, int key_state);
 void show_text(int x, int y, int width, int height, char *text,
 	int font, int direction, int size, int color, int hjust, int vjust);
+void update_stats(int update_type, char ch, char* note, double freq);
 #endif
